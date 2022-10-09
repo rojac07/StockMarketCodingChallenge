@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace StockMarketCodingChallengeWpfApp.Players
+namespace DomainModels
 {
     public class StockHistory
     {

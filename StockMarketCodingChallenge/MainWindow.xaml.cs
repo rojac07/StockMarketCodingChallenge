@@ -9,8 +9,8 @@ namespace StockMarketCodingChallengeWpfApp
     {
         public MainWindow()
         {
-            DataContext = new MainWindowViewModel();            
             InitializeComponent();
+            DataContext = new MainWindowViewModel(new Size(this.Width, this.Height));
         }
     }
 }

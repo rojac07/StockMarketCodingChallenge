@@ -10,6 +10,5 @@ namespace StockMarketCodingChallengeWpfApp
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
     }
 }

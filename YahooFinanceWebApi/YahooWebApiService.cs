@@ -8,17 +8,20 @@ namespace YahooFinanceWebApi
 {
     public class YahooWebApiService : IYahooWebApiService
     {
-        private string query = "https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1d&events=history&includeAdjustedClose=true";
+        private string queryV7 = "https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1d&events=history&includeAdjustedClose=true";
 
         public List<Candle> Download(string symbol, DateTime startDate, DateTime endDate)
         {
+            if (string.IsNullOrEmpty(symbol))
+                throw new ArgumentNullException("Symbol cannot be empty or null!");
+
             return DownloadData(symbol, startDate, endDate);
         }
 
         private List<Candle> DownloadData(string symbol, DateTime startDate, DateTime endDate)
         {
             List<Candle> candles = null;
-            string url = string.Format(query,
+            string url = string.Format(queryV7,
                                        symbol,
                                        ConvertToUnixTimestamp(startDate),
                                        ConvertToUnixTimestamp(endDate));
@@ -43,6 +46,11 @@ namespace YahooFinanceWebApi
             }
         }
 
+        /// <summary>
+        /// Converts given date to UnixTimestamp. 
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
         private static double ConvertToUnixTimestamp(DateTime date)
         {
             DateTime origin = new DateTime(1970, 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -74,7 +82,7 @@ namespace YahooFinanceWebApi
             var candle = new Candle();
             var separator = new[] { "," };
             var blocks = line.Split(separator, StringSplitOptions.None);
-            candle.Name = symbolName;
+            candle.Name = symbolName;            
             candle.Date = DateTime.Parse(blocks[0]);
             candle.Open = double.Parse(blocks[1]);
             candle.High = double.Parse(blocks[2]);

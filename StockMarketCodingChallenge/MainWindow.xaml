@@ -5,57 +5,73 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StockMarketCodingChallengeWpfApp.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800">
-    <Grid Background="NavajoWhite">
+        Title="MainWindow" Height="800" Width="1400">
+    <Grid Background="Black">
         <Grid.Resources >
             <local:PointsToPathConverter x:Key="PointsToPathConverter" />
         </Grid.Resources>
 
-        <Canvas Height="600" Width="800">
+        <Canvas Height="800" Width="1400">
 
-            <Path Data="{Binding SymbolPoints, Converter={StaticResource ResourceKey=PointsToPathConverter}}"
-          Stroke="Black"/>
+            <!--Graph-->
+            <Path Data="{Binding Points, 
+                  Converter={StaticResource ResourceKey=PointsToPathConverter}}"
+                  Stroke="Silver" 
+                  StrokeThickness="0.75"/>
 
-            <!--<Polyline Points="{Binding SymbolPoints, Mode=OneWay}"                      
-                      Stroke="BlueViolet"
-                      StrokeThickness="1"                      
-                      Canvas.Top="2"
-                      Canvas.Left="2" />-->
+            <!--Grid lines-->
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="00"  X2="1400" Y2="00"/>
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="100" X2="1400" Y2="100"/>
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="200" X2="1400" Y2="200"/>
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="300" X2="1400" Y2="300"/>
+            <!--Middle line-->
+            <Line Stroke="White" StrokeThickness="0.4"                         X1="0"  Y1="400" X2="1400" Y2="400"/>            
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="500" X2="1400" Y2="500"/>
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="600" X2="1400" Y2="600"/>
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="700" X2="1400" Y2="700"/>
+            <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="800" X2="1400" Y2="800"/>
 
+            <!--Show stock symbol-->
             <TextBlock FontWeight="Bold" 
                        FontSize="14" 
-                       Foreground="BlueViolet" 
-                       Margin="50 20 20 20" 
+                       Foreground="White" 
+                       Margin="25 40 20 20" 
                        Text="{Binding Symbol}"/>
 
+            <!--Show information-->
             <TextBlock FontWeight="Bold" 
                        FontSize="14" 
-                       Foreground="BlueViolet" 
-                       Margin="150 20 20 20" 
-                       Text="{Binding Info}"/>
+                       Foreground="White" 
+                       Margin="25 20 20 20" 
+                       Text="{Binding Information}"/>
 
+            <!--Results label-->
             <TextBlock FontWeight="Bold" 
-                       FontSize="18" 
-                       Foreground="Black" 
-                       Margin="10 350 10 10" 
-                       Text="Team / Player:"/>
+                       FontSize="16" 
+                       Foreground="White" 
+                       Margin="0 590 10 10" 
+                       Text="Results:"/>
 
-            <!--Winning player-->
+            <!--Player list-->
             <TextBlock FontWeight="Bold" 
-                       FontSize="14" 
-                       Foreground="Red" 
-                       Margin="10 375 10 10" 
-                       Text="{Binding WinningPlayer}"/>
-
-
-            <!--Winning player-->
-            <TextBlock FontWeight="Bold" 
-                       FontSize="12" 
-                       Foreground="Black" 
-                       Margin="12 395 10 10" 
+                       FontSize="12"
+                       Foreground="White" 
+                       Margin="10 620 10 10" 
                        Text="{Binding PlayerList}"/>
 
+            <!--Pause button-->
+            <Button Width="75" 
+                    Height="25"                    
+                    Content="Start /Stop"
+                    Command="{Binding PauseCommand}"                    
+                    Margin="1300 10 10 10"/>
 
+            <!--Start challenge button-->
+            <Button Width="100" 
+                    Height="25" 
+                    Content="New challenge"
+                    Command="{Binding CreateNewChallengeCommand}"                    
+                    Margin="1200 10 10 10"/>
         </Canvas>
     </Grid>
 </Window>
