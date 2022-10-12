@@ -1,6 +1,7 @@
 ﻿using DomainModels;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 
@@ -84,10 +85,10 @@ namespace YahooFinanceWebApi
             var blocks = line.Split(separator, StringSplitOptions.None);
             candle.Name = symbolName;            
             candle.Date = DateTime.Parse(blocks[0]);
-            candle.Open = double.Parse(blocks[1]);
-            candle.High = double.Parse(blocks[2]);
-            candle.Low = double.Parse(blocks[3]);
-            candle.Close = double.Parse(blocks[4]);
+            candle.Open = double.Parse(blocks[1], CultureInfo.InvariantCulture);
+            candle.High = double.Parse(blocks[2], CultureInfo.InvariantCulture);
+            candle.Low = double.Parse(blocks[3], CultureInfo.InvariantCulture);
+            candle.Close = double.Parse(blocks[4], CultureInfo.InvariantCulture);
             return candle;
         }
     }
