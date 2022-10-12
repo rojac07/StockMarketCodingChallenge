@@ -20,14 +20,14 @@ namespace StockMarketCodingChallengeWpfApp
             {new Player2(new Wallet(initialBalance)) },
         };
         private DateTime start = new DateTime(2004, 1, 1);
-        private DateTime end = new DateTime(2018, 1, 15);
+        private DateTime end = new DateTime(2010, 1, 1);
 
         public MainWindowViewModel(Size size)
         {
             PauseCommand = new RelayCommand(OnPausedCommand);
             CreateNewChallengeCommand = new RelayCommand(OnNewChallengeCommand);
 
-            this.stockSimulator = new StockSimulator(players, new YahooWebApiService(), size, GameSpeed.Maximum);
+            this.stockSimulator = new StockSimulator(players, new YahooWebApiService(), size, GameSpeed.VeryFast);
             this.stockSimulator.OnNewTradeDayEvent += RefreshUi;
         }
 
