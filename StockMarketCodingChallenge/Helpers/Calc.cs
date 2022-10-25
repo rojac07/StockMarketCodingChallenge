@@ -30,9 +30,9 @@ namespace StockMarketCodingChallengeWpfApp.Helpers
 
         public static double GetScaleFactor(double a, double b) => a / b;
 
-        public static double TotalAssetValue(IPlayer player, double currentStockPrice)
+        public static double TotalAssetValue(Wallet wallet, double currentStockPrice)
         {
-            var totalValue = player.MyWallet.Balance + player.MyWallet.Stocks * currentStockPrice;
+            var totalValue = wallet.Balance + wallet.Stocks * currentStockPrice;
             return totalValue;
         }
     }

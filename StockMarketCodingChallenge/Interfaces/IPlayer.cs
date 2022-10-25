@@ -1,5 +1,5 @@
 ﻿using DomainModels;
-using System;
+using System.Collections.Generic;
 
 namespace StockMarketCodingChallengeWpfApp.Interfaces
 {
@@ -7,8 +7,6 @@ namespace StockMarketCodingChallengeWpfApp.Interfaces
     {
         string Name { get; }
 
-        Wallet MyWallet { get; }
-
-        void OnNewTradeDay(ITradeAction action);
+        void OnNewTradeDay(ITradeAction action, Wallet wallet, IList<double> history);
     }
 }

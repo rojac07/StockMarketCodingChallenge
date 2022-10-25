@@ -18,10 +18,10 @@ namespace StockMarketCodingChallengeWpfApp
         private Timer timer;
         private DateTime start, end; // data range stock data will be taken.         
         private readonly GameSpeed gameSpeed;
-        private readonly IList<IPlayer> players;
+        private readonly IList<Tuple<IPlayer, Wallet>> players;
         private readonly IYahooWebApiService yahooWebApiService;
         
-        public StockSimulator(IList<IPlayer> players, IYahooWebApiService yahooWebApiService, Size windowSize, GameSpeed gameSpeed)
+        public StockSimulator(IList<Tuple<IPlayer, Wallet>> players, IYahooWebApiService yahooWebApiService, Size windowSize, GameSpeed gameSpeed)
         {
             this.players = players;
             this.yahooWebApiService = yahooWebApiService;
@@ -133,28 +133,29 @@ namespace StockMarketCodingChallengeWpfApp
             GraphPoints.Add(point);
         }
 
-        private void OnNewTradeDay(Candle candle, IList<IPlayer> players)
+        private void OnNewTradeDay(Candle candle, IList<Tuple<IPlayer, Wallet>> players)
         {
             foreach (var player in players)
             {
                 var stockPrice = candle.Open;
-                var tradeAction = new TradeAction(player.MyWallet, stockPrice);
-                player.OnNewTradeDay(tradeAction);
+                var wallet = player.Item2;
+                var tradeAction = new TradeAction(wallet, stockPrice);
+                player.Item1.OnNewTradeDay(tradeAction, wallet, History.Records);
             }
             History.Records.Add(candle.Open);
         }
 
-        private GameResults CalculateGameResults(IList<IPlayer> players, Candle candle)
+        private GameResults CalculateGameResults(IList<Tuple<IPlayer, Wallet>> players, Candle candle)
         {
             var gameResults = new GameResults();
             double stockPrice = candle.Open;
-            var sortedPlayers = players.OrderByDescending(x => Calc.TotalAssetValue(x, stockPrice)).ToList();
+            var sortedPlayers = players.OrderByDescending(x => Calc.TotalAssetValue(x.Item2, stockPrice)).ToList();
             int standing = 1;
             foreach (var player in sortedPlayers)
             {
-                var totalAssets = Math.Round(Calc.TotalAssetValue(player, stockPrice), 0);
-                var stocks = Math.Round(player.MyWallet.Stocks, 0);
-                var result = $"{standing++}. {player.Name}\t Stocks: {stocks}\t Value: {totalAssets} $ \r\n\r\n";
+                var totalAssets = Math.Round(Calc.TotalAssetValue(player.Item2, stockPrice), 0);
+                var stocks = Math.Round(player.Item2.Stocks, 0);//MyWallet.Stocks, 0);
+                var result = $"{standing++}. {player.Item1.Name}\t Stocks: {stocks}\t Value: {totalAssets} $ \r\n\r\n";
                 gameResults.Results += result;
             }
             gameResults.Information = $"{start.ToShortDateString()} - {end.ToShortDateString()}\t{candle.Date.ToShortDateString()}";

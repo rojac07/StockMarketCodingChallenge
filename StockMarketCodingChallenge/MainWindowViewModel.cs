@@ -14,10 +14,12 @@ namespace StockMarketCodingChallengeWpfApp
         private readonly StockSimulator stockSimulator;
         private static readonly double initialBalance = 10000;
         private bool toggle = true;
-        private IList<IPlayer> players = new List<IPlayer>()
+        private IList<Tuple<IPlayer, Wallet>> players = new List<Tuple<IPlayer, Wallet>>()
         {
-            {new Player1(new Wallet(initialBalance)) },
-            {new Player2(new Wallet(initialBalance)) },
+            {new Tuple<IPlayer, Wallet>( new Player1(), new Wallet(initialBalance)) },
+            {new Tuple<IPlayer, Wallet>( new Player2(), new Wallet(initialBalance)) },//
+            {new Tuple<IPlayer, Wallet>( new DemoPlayer1000(), new Wallet(initialBalance)) },
+            //..
         };
         private DateTime start = new DateTime(2004, 1, 1);
         private DateTime end = new DateTime(2010, 1, 1);
@@ -27,7 +29,7 @@ namespace StockMarketCodingChallengeWpfApp
             PauseCommand = new RelayCommand(OnPausedCommand);
             CreateNewChallengeCommand = new RelayCommand(OnNewChallengeCommand);
 
-            this.stockSimulator = new StockSimulator(players, new YahooWebApiService(), size, GameSpeed.VeryFast);
+            this.stockSimulator = new StockSimulator(players, new YahooWebApiService(), size, GameSpeed.Maximum);
             this.stockSimulator.OnNewTradeDayEvent += RefreshUi;
         }
 

@@ -62,7 +62,7 @@
             <!--Pause button-->
             <Button Width="75" 
                     Height="25"                    
-                    Content="Start /Stop"
+                    Content="Start / Pause"
                     Command="{Binding PauseCommand}"                    
                     Margin="1300 10 10 10"/>
 

@@ -1,19 +1,14 @@
 ﻿using DomainModels;
 using StockMarketCodingChallengeWpfApp.Interfaces;
+using System.Collections.Generic;
 
 namespace StockMarketCodingChallengeWpfApp.Players
 {
     public class Player1 : IPlayer
     {
         public string Name => "Team 1"; //TODO: add your team name here.. 
-        private readonly Wallet myWallet;
-
-        public Player1(Wallet myWallet)
-        {
-            this.myWallet = myWallet;
-        }
-
-        public void OnNewTradeDay(ITradeAction action)
+      
+        public void OnNewTradeDay(ITradeAction action, Wallet myWallet, IList<double> history)
         {
             //TODO impolement your logic here.             
             double stockCurrentPrice = action.StockPrice;
@@ -27,7 +22,7 @@ namespace StockMarketCodingChallengeWpfApp.Players
             }
             else if(myWallet.Balance <= 50)
             {
-                var amountToSell = MyWallet.Stocks / 4;
+                var amountToSell = myWallet.Stocks / 4;
                 action.Sell(amountToSell);
             }
             else
@@ -36,6 +31,5 @@ namespace StockMarketCodingChallengeWpfApp.Players
             }
         }
 
-        public Wallet MyWallet => myWallet;
     }
 }
