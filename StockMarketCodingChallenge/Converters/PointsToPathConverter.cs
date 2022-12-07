@@ -11,6 +11,7 @@ namespace StockMarketCodingChallengeWpfApp.Converters
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
+            if (value == null) return null;
             List<Point> points = (List<Point>)value;
             if (points.Count > 0)
             {

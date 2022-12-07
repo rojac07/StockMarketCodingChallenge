@@ -1,7 +1,9 @@
 ﻿using DomainModels;
 using GalaSoft.MvvmLight.Command;
+using StockMarketCodingChallengeWpfApp.Helpers;
 using StockMarketCodingChallengeWpfApp.Interfaces;
 using StockMarketCodingChallengeWpfApp.Players;
+using StockMarketCodingChallengeWpfApp.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -14,27 +16,38 @@ namespace StockMarketCodingChallengeWpfApp
         private readonly StockSimulator stockSimulator;
         private static readonly double initialBalance = 10000;
         private bool toggle = true;
+        private Size windowSize;
+        int xPos = 0;
         private IList<Tuple<IPlayer, Wallet>> players = new List<Tuple<IPlayer, Wallet>>()
         {
             {new Tuple<IPlayer, Wallet>( new Player1(), new Wallet(initialBalance)) },
             {new Tuple<IPlayer, Wallet>( new Player2(), new Wallet(initialBalance)) },//
-            {new Tuple<IPlayer, Wallet>( new DemoPlayer1000(), new Wallet(initialBalance)) },
+            
             //..
         };
-        private DateTime start = new DateTime(2004, 1, 1);
-        private DateTime end = new DateTime(2010, 1, 1);
+        private DateRange dateRange = new DateRange
+        {
+            StartDate = new DateTime(2004, 1, 1),
+            EndDate = new DateTime(2010, 1, 1)
+        };
+
 
         public MainWindowViewModel(Size size)
         {
             PauseCommand = new RelayCommand(OnPausedCommand);
             CreateNewChallengeCommand = new RelayCommand(OnNewChallengeCommand);
 
-            this.stockSimulator = new StockSimulator(players, new YahooWebApiService(), size, GameSpeed.Maximum);
+            this.stockSimulator = new StockSimulator(players, new YahooWebApiService(), new StockSymbolRepository(), new StockDataFileRepository(), GameSpeed.Maximum);
             this.stockSimulator.OnNewTradeDayEvent += RefreshUi;
+            this.windowSize = size;
         }
 
         private void RefreshUi(object sender, EventArgs e)
         {
+            Candle candle = (Candle)sender;
+            AddNewPoint(candle, 0, 100, 10000);// TODO: n´calculate correct values..
+            CurrentStockPrice = candle.Open;
+            OnPropertyChanged(nameof(CurrentStockPrice));
             OnPropertyChanged(nameof(Symbol));
             OnPropertyChanged(nameof(Points));
             OnPropertyChanged(nameof(Information));
@@ -43,9 +56,19 @@ namespace StockMarketCodingChallengeWpfApp
 
         private void OnNewChallengeCommand()
         {
-            string symbol = null;// if null then it will find random symbol
-            var isInitialized = this.stockSimulator.CreateNewChallenge(start, end, symbol);
-            RefreshUi(null, null);
+            //var isInitialized = this.stockSimulator.NewGame(dateRange, "SYMBOL NAME");
+            var isInitialized = this.stockSimulator.NewGame(dateRange, 10);
+        }
+
+        private void AddNewPoint(Candle candle, int minPrice, int maxPrice, int elementCount)
+        {
+            int margins = 10;
+            double scaleFactorY = Calc.ScaleFactor(windowSize.Height - margins, maxPrice);
+            double scaleX = Calc.ScaleFactor(windowSize.Width, elementCount);
+            double x = xPos++ * scaleX;
+            double y = windowSize.Height + (-1) * scaleFactorY * candle.Open;
+            var point = new Point(x, y);
+            Points.Add(point);
         }
 
         private void OnPausedCommand()
@@ -64,10 +87,12 @@ namespace StockMarketCodingChallengeWpfApp
 
         public string Symbol => stockSimulator.Symbol;
 
-        public string PlayerList => stockSimulator.Results.Results;
+        public double CurrentStockPrice { get; set; }
 
-        public string Information => stockSimulator.Results.Information;
+        public string PlayerList => Calc.GetSortedPLayerList(players, this.CurrentStockPrice);
 
-        public List<Point> Points => stockSimulator.GraphPoints;
+        public string Information => "stockSimulator.Results.Information";
+
+        public List<Point> Points { get; set; } = new List<Point>();
     }
 }

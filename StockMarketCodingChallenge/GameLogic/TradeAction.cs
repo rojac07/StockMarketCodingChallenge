@@ -1,4 +1,5 @@
 ﻿using DomainModels;
+using StockMarketCodingChallengeWpfApp.Helpers;
 using StockMarketCodingChallengeWpfApp.Interfaces;
 using System;
 
@@ -28,7 +29,7 @@ namespace StockMarketCodingChallengeWpfApp
             {
                 wallet.Balance -= amountToSpend;
                 wallet.Stocks += amount;
-
+                //Console.WriteLine("Bought:  {0} stocks. Spend: {1}$, Total stocks: {2}, Total value: {3}$", amount, amountToSpend, wallet.Stocks, Calc.TotalAssetValue(wallet, stockPrice));
             }
             else
             {
@@ -38,7 +39,7 @@ namespace StockMarketCodingChallengeWpfApp
                 {
                     wallet.Balance -= amountToSpend;
                     wallet.Stocks += amount;
-                    Console.WriteLine("Bought: {0} stocks. Spend: {1}$", amount, amountToSpend);
+                    //Console.WriteLine("BOUGHT: {0} stocks. Spend: {1}$, Total stocks: {2}, Total value: {3}$", amount, amountToSpend, wallet.Stocks, Calc.TotalAssetValue(wallet, stockPrice));
                 }
             }
         }
@@ -53,7 +54,7 @@ namespace StockMarketCodingChallengeWpfApp
                 double amountToReceive = amount * stockPrice;
                 wallet.Stocks -= amount;
                 wallet.Balance += amountToReceive;
-                Console.WriteLine("Sold: {0} stocks. Received: {1}$", amount, amountToReceive);
+                //Console.WriteLine("SOLD: {0} stocks. Spend: {1}$, Total stocks: {2}, Total value: {3}$", amount, amountToReceive, wallet.Stocks, Calc.TotalAssetValue(wallet, stockPrice));
             }
         }
 

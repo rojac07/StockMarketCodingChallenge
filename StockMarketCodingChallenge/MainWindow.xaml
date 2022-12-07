@@ -11,7 +11,7 @@
             <local:PointsToPathConverter x:Key="PointsToPathConverter" />
         </Grid.Resources>
 
-        <Canvas Height="800" Width="1400">
+        <Canvas Height="Auto" Width="Auto">
 
             <!--Graph-->
             <Path Data="{Binding Points, 
@@ -25,53 +25,55 @@
             <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="200" X2="1400" Y2="200"/>
             <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="300" X2="1400" Y2="300"/>
             <!--Middle line-->
-            <Line Stroke="White" StrokeThickness="0.4"                         X1="0"  Y1="400" X2="1400" Y2="400"/>            
+            <Line Stroke="White" StrokeThickness="0.4"                         X1="0"  Y1="400" X2="1400" Y2="400"/>
             <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="500" X2="1400" Y2="500"/>
             <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="600" X2="1400" Y2="600"/>
             <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="700" X2="1400" Y2="700"/>
             <Line Stroke="White" StrokeThickness="0.2" StrokeDashArray="20 20" X1="0"  Y1="800" X2="1400" Y2="800"/>
 
-            <!--Show stock symbol-->
-            <TextBlock FontWeight="Bold" 
+            
+
+            <StackPanel>
+                <!--Pause button-->
+                <Button Width="100" 
+                    Height="25"
+                    HorizontalAlignment="Left"
+                    Content="Start / Pause"
+                    Command="{Binding PauseCommand}"/>
+
+                <!--Start challenge button-->
+                <Button Width="100" 
+                    Height="25"          
+                    Content="New challenge"
+                    HorizontalAlignment="Left"
+                    Command="{Binding CreateNewChallengeCommand}"/>
+
+                <!--Show stock symbol-->
+                <TextBlock FontWeight="Bold" 
                        FontSize="14" 
                        Foreground="White" 
-                       Margin="25 40 20 20" 
                        Text="{Binding Symbol}"/>
 
-            <!--Show information-->
-            <TextBlock FontWeight="Bold" 
+                <!--Show information-->
+                <TextBlock FontWeight="Bold" 
                        FontSize="14" 
                        Foreground="White" 
-                       Margin="25 20 20 20" 
                        Text="{Binding Information}"/>
 
-            <!--Results label-->
-            <TextBlock FontWeight="Bold" 
+                <!--Results label-->
+                <TextBlock FontWeight="Bold" 
                        FontSize="16" 
                        Foreground="White" 
-                       Margin="0 590 10 10" 
                        Text="Results:"/>
 
-            <!--Player list-->
-            <TextBlock FontWeight="Bold" 
+                <!--Player list-->
+                <TextBlock FontWeight="Bold" 
                        FontSize="12"
                        Foreground="White" 
-                       Margin="10 620 10 10" 
                        Text="{Binding PlayerList}"/>
-
-            <!--Pause button-->
-            <Button Width="75" 
-                    Height="25"                    
-                    Content="Start / Pause"
-                    Command="{Binding PauseCommand}"                    
-                    Margin="1300 10 10 10"/>
-
-            <!--Start challenge button-->
-            <Button Width="100" 
-                    Height="25" 
-                    Content="New challenge"
-                    Command="{Binding CreateNewChallengeCommand}"                    
-                    Margin="1200 10 10 10"/>
+            </StackPanel>
+            
+            
         </Canvas>
     </Grid>
 </Window>

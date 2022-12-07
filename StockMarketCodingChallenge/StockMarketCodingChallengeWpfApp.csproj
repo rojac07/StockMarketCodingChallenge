@@ -83,15 +83,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\CandleConverter.cs" />
     <Compile Include="Converters\PointsToPathConverter.cs" />
+    <Compile Include="GameLogic\GameResults.cs" />
     <Compile Include="Helpers\Calc.cs" />
+    <Compile Include="Repositories\IStockDataFileRepository.cs" />
+    <Compile Include="Repositories\IStockSymbolRepository.cs" />
     <Compile Include="Interfaces\IPlayer.cs" />
     <Compile Include="Interfaces\ITradeAction.cs" />
     <Compile Include="Interfaces\IStockSimulator.cs" />
     <Compile Include="Players\Player1.cs" />
     <Compile Include="Players\Player2.cs" />
     <Compile Include="GameLogic\StockSimulator.cs" />
-    <Compile Include="Helpers\StockSymbolParser.cs" />
+    <Compile Include="Repositories\StockDataFileRepository.cs" />
+    <Compile Include="Repositories\StockSymbolRepository.cs" />
     <Compile Include="GameLogic\TradeAction.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

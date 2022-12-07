@@ -1,9 +1,12 @@
 ﻿using DomainModels;
 using StockMarketCodingChallengeWpfApp.Helpers;
 using StockMarketCodingChallengeWpfApp.Interfaces;
+using StockMarketCodingChallengeWpfApp.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Timers;
 using System.Windows;
 using YahooFinanceWebApi;
@@ -13,53 +16,118 @@ namespace StockMarketCodingChallengeWpfApp
     public class StockSimulator : IStockSimulator
     {
         int xPos = 0;
-        private double min, max, margins, elementCount;
-        private readonly Size windowSize;
+        private double minPrice, maxPrice, elementCount;
         private Timer timer;
-        private DateTime start, end; // data range stock data will be taken.         
+        private DateRange dateRange; // data range stock data will be taken.         
         private readonly GameSpeed gameSpeed;
         private readonly IList<Tuple<IPlayer, Wallet>> players;
         private readonly IYahooWebApiService yahooWebApiService;
-        
-        public StockSimulator(IList<Tuple<IPlayer, Wallet>> players, IYahooWebApiService yahooWebApiService, Size windowSize, GameSpeed gameSpeed)
+        private readonly IStockSymbolRepository stockSymbolRepository;
+        private readonly IStockDataFileRepository stockDataFileRepository;
+        public event EventHandler OnNewTradeDayEvent;
+
+
+        public StockSimulator(IList<Tuple<IPlayer, Wallet>> players,
+                              IYahooWebApiService yahooWebApiService,
+                              IStockSymbolRepository stockSymbolRepository,
+                              IStockDataFileRepository stockDataFileRepository,
+                              GameSpeed gameSpeed)
         {
             this.players = players;
             this.yahooWebApiService = yahooWebApiService;
-            this.windowSize = windowSize;
+            this.stockSymbolRepository = stockSymbolRepository;
+            this.stockDataFileRepository = stockDataFileRepository;
             this.gameSpeed = gameSpeed;
-            GraphPoints = new List<Point>();
         }
-
-        public event EventHandler OnNewTradeDayEvent;
 
         /// <summary>
         /// Finds a random symbol and loads hystorical data.
         /// </summary>
         /// <param name="startDate"></param>
         /// <param name="endDate"></param>
-        public bool CreateNewChallenge(DateTime startDate, DateTime endDate, string symbol = null)
+        public bool NewGame(DateRange dateRange, string symbol = null)
         {
-            var candles = LoadStockData(startDate, endDate, symbol);
+            var candles = LoadStockData(dateRange, symbol);
             if (candles == null || !candles.Any())
                 return false;
 
             xPos = 0;
             elementCount = candles.Count;
-            this.start = startDate;
-            this.end = endDate;
-            this.max = Calc.Max(candles);
-            this.min = Calc.Min(candles);
+            this.dateRange = dateRange;
+
             this.timer = new Timer { Interval = (int)gameSpeed };
             this.timer.Stop();
             this.timer.Elapsed += OnElapsed;
-            Candles = new Queue<Candle>();
-            GraphPoints = new List<Point>();
+            this.Candles = new Queue<Candle>();
             candles.ForEach(x => this.Candles.Enqueue(x));//Add all items to queque collection
-            History = CreateHistoricalRecords(10);
+            History = CreateHistoricalRecords(30);
             return true;
         }
 
-        public List<Point> GraphPoints { get; set; }
+        private void Initialize(double balance)
+        {
+            foreach (var item in this.players)
+            {
+                item.Item2.Balance = balance;
+                item.Item2.Stocks = 0;
+            }
+
+            History = new StockHistory
+            {
+                Records = new List<double>()
+            };
+            Symbol = string.Empty;
+            Candles = new Queue<Candle>();
+        }
+
+        public bool NewGame(DateRange dateRange, int randomStockListCount)
+        {
+            var random = new Random();
+            AllResults = new List<GameResults>();
+            var stockSymbolList = stockSymbolRepository.GetAll();
+
+            for (int i = 0; i < randomStockListCount; i++)
+            {
+                Initialize(10000);
+
+                var symbol = GetRandomSymbol(stockSymbolList, random);
+                var candles = LoadStockData(dateRange, symbol.Symbol);
+
+                if (candles == null || candles.Count() < 30)
+                    return false;
+                
+                candles.ForEach(x => this.Candles.Enqueue(x));//Add all items to queque collection
+                History = CreateHistoricalRecords(30);
+                var gameResults = PlayGame(candles, players);
+                AllResults.Add(gameResults);
+            }
+
+            return true;
+        }
+
+        public List<GameResults> AllResults { get; private set; }
+        private GameResults PlayGame(List<Candle> candles, IList<Tuple<IPlayer, Wallet>> players)
+        {
+            Candle candle = null;
+            foreach (var c in Candles)
+            {
+                foreach (var player in players)
+                {
+                    var stockPrice = c.Open;
+                    var wallet = player.Item2;
+                    var tradeAction = new TradeAction(wallet, stockPrice);
+                    //Debug.Write(player.Item1.Name + ": ");
+                    player.Item1.OnNewTradeDay(tradeAction, wallet, History.Records);
+                }
+                History.Records.Add(c.Open);
+                candle = c;
+            }
+            var results = CalculateGameResults(players, candle.Open);
+            Debug.WriteLine(Calc.GetSortedPLayerList(players, candle.Open));
+
+
+            return results;
+        }
 
         private StockHistory History { get; set; }
 
@@ -74,33 +142,43 @@ namespace StockMarketCodingChallengeWpfApp
             var index = random.Next(0, symbols.Count);
             return symbols[index];
         }
-                
+
         public void Start() => this.timer?.Start();
 
         public void Pause() => this.timer?.Stop();
 
         public void Stop() => this.timer?.Stop();
-        
 
-        private List<Candle> LoadStockData(DateTime startDate, DateTime endDate, string symbol)
+
+        private List<Candle> LoadStockData(DateRange dateRange, string symbol)
         {
             List<Candle> candles;
             if (!string.IsNullOrEmpty(symbol))
             {
-                candles = yahooWebApiService.Download(symbol, startDate, endDate);          
+                candles = stockDataFileRepository.Get(symbol);//Try get first from local cache.. 
+                if (candles == null)
+                    candles = yahooWebApiService.Download(symbol, dateRange.StartDate, dateRange.EndDate);
+
+                stockDataFileRepository.Save(symbol, candles);//Save data locally
                 Console.WriteLine(symbol);
                 Symbol = symbol;
-                return candles;
+
+                return candles?.Select(x => x).Where(x => x.Date > dateRange.StartDate).ToList();
             }
-          
+
             var random = new Random();  //Load random stock symbol
             StockSymbol randomStockSymbol;
             do
             {
-                var stockSymbolList = StockSymbolParser.Parse(@"Resources\nasdaq_screener_1664001254530.csv");
+                var stockSymbolList = stockSymbolRepository.GetAll();
                 randomStockSymbol = GetRandomSymbol(stockSymbolList, random);
-                var randomSymbol = randomStockSymbol.Symbol;                
-                candles = yahooWebApiService.Download(randomSymbol, startDate, endDate);
+                var randomSymbol = randomStockSymbol.Symbol;
+
+                candles = stockDataFileRepository.Get(randomSymbol);//Try get first from local cache.. 
+                if (candles == null)
+                    candles = yahooWebApiService.Download(randomSymbol, dateRange.StartDate, dateRange.EndDate);
+
+                stockDataFileRepository.Save(randomSymbol, candles);//Save data locally
 
             } while (candles == null);
 
@@ -111,26 +189,16 @@ namespace StockMarketCodingChallengeWpfApp
 
         private void OnElapsed(object sender, ElapsedEventArgs e)
         {
-            if(!this.Candles.Any())
+            if (!this.Candles.Any())
             {
                 this.Stop();
                 return;
             }
             var candle = Candles.Dequeue();
-            AddNewGraphPoint(candle);
+            //AddNewGraphPoint(candle);
             OnNewTradeDay(candle, this.players);
-            Results = CalculateGameResults(players, candle);
-            OnNewTradeDayEvent?.Invoke(sender, e);
-        }
-
-        private void AddNewGraphPoint(Candle candle)
-        {
-            double scaleFactorY = Calc.GetScaleFactor(windowSize.Height - margins, max);
-            double scaleX = Calc.GetScaleFactor(windowSize.Width, elementCount);
-            double x = xPos++ * scaleX;
-            double y = windowSize.Height + (-1) * scaleFactorY * candle.Open;
-            var point = new Point(x, y);
-            GraphPoints.Add(point);
+            Results = CalculateGameResults(players, candle.Open);
+            OnNewTradeDayEvent?.Invoke(candle, e);
         }
 
         private void OnNewTradeDay(Candle candle, IList<Tuple<IPlayer, Wallet>> players)
@@ -145,34 +213,34 @@ namespace StockMarketCodingChallengeWpfApp
             History.Records.Add(candle.Open);
         }
 
-        private GameResults CalculateGameResults(IList<Tuple<IPlayer, Wallet>> players, Candle candle)
+        private GameResults CalculateGameResults(IList<Tuple<IPlayer, Wallet>> players, double currentStockPrice)
         {
-            var gameResults = new GameResults();
-            double stockPrice = candle.Open;
-            var sortedPlayers = players.OrderByDescending(x => Calc.TotalAssetValue(x.Item2, stockPrice)).ToList();
-            int standing = 1;
-            foreach (var player in sortedPlayers)
+            var sortedPlayers = players.OrderByDescending(x => Calc.TotalAssetValue(x.Item2, currentStockPrice)).ToList();
+            var gameResults = new GameResults
             {
-                var totalAssets = Math.Round(Calc.TotalAssetValue(player.Item2, stockPrice), 0);
-                var stocks = Math.Round(player.Item2.Stocks, 0);//MyWallet.Stocks, 0);
-                var result = $"{standing++}. {player.Item1.Name}\t Stocks: {stocks}\t Value: {totalAssets} $ \r\n\r\n";
-                gameResults.Results += result;
-            }
-            gameResults.Information = $"{start.ToShortDateString()} - {end.ToShortDateString()}\t{candle.Date.ToShortDateString()}";
+                Players = sortedPlayers
+            };
             return gameResults;
         }
-        
+
         private StockHistory CreateHistoricalRecords(int historyCount)
         {
             var stockHistory = new StockHistory();
             stockHistory.Records = new List<double>();
-            
+
             for (int i = 0; i < historyCount; i++)
             {
                 var stockPrice = Candles.Dequeue();
                 stockHistory.Records.Add(stockPrice.Open);
             }
             return stockHistory;
-        }       
+        }
+
+        public void SaveResults()
+        {
+            throw new NotImplementedException();
+        }
+
+
     }
 }
